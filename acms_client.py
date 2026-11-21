@@ -1,9 +1,10 @@
+import os
 import requests
 import json
 
 class ACMSClient:
-    def __init__(self, base_url="http://localhost:4000/api/v1"):
-        self.base_url = base_url
+    def __init__(self, base_url=None):
+        self.base_url = (base_url or os.getenv("ACMS_BASE_URL", "http://localhost:4000/api/v1")).rstrip("/")
         self.headers = {
             "Content-Type": "application/json",
             "x-agent-id": "gemini_bot"
@@ -15,7 +16,7 @@ class ACMSClient:
             # We hit the health endpoint to see if the system is responsive
             res = requests.get(f"{self.base_url}/health/embedder", timeout=2)
             return res.status_code == 200
-        except:
+        except Exception:
             return False
 
     def query_memory(self, user_query):
@@ -27,17 +28,17 @@ class ACMSClient:
           neural memory.
         * ``unknown_unknowns`` - a separate list of insights or signals that
           the system thinks could be relevant but are not directly tied to any
-          existing node.  These "unknown unknowns" should be surfaced to the
+          existing node. These "unknown unknowns" should be surfaced to the
           assistant so it can reason about them.
 
-        Returns a tuple ``(results_list, unknowns_list)``.  Either element may
+        Returns a tuple ``(results_list, unknowns_list)``. Either element may
         be empty if nothing was provided.
         """
         url = f"{self.base_url}/query"
         payload = {
             "query_text": user_query,
             "agent_id": "root",
-            "max_results": 15,          # Only get the top 10 most relevant nodes
+            "max_results": 15,          # Retrieve top relevant nodes
             "min_relevance": 0.55,      # Filter out noise
             "reasoning_mode": "normal"
         }

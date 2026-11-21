@@ -1,11 +1,15 @@
 import os
 import json
 import requests
+from dotenv import load_dotenv
+
+load_dotenv()
 
 # ==============================================================================
 # CONFIGURATION
 # ==============================================================================
-CMS_URL = "http://localhost:4000/api/v1/ingest"
+ACMS_BASE_URL = os.getenv("ACMS_BASE_URL", "http://localhost:4000/api/v1").rstrip("/")
+CMS_URL = os.getenv("ACMS_INGEST_URL", f"{ACMS_BASE_URL}/ingest")
 HEADERS = {
     "Content-Type": "application/json",
     "x-agent-id": "root" 
@@ -59,8 +63,6 @@ def ingest_folder(folder_path):
     ACMS node for each file. The node title is the file name and the content
     is the file's textual contents. Binary files are skipped.
     """
-    import os
-
     files = [f for f in os.listdir(folder_path) if os.path.isfile(os.path.join(folder_path, f))]
     print(f"📁 Found {len(files)} files in {folder_path}, ingesting...")
 
@@ -91,6 +93,9 @@ def main():
     if os.path.isdir(args.input):
         ingest_folder(args.input)
     else:
+        if not os.path.exists(args.input):
+            print(f"❌ File not found: {args.input}")
+            return
         with open(args.input, 'r', encoding='utf-8') as f:
             raw_data = json.load(f)
 
